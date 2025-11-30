@@ -1,28 +1,30 @@
 // Grenar_lyrics_video_generator.jsx
 // After Effects ExtendScript - Karaoke Highlight + transcript file input + vertical wrapping
-// Version: 1.2 (FIXED)
+// Version: 1.3 (4K Ready)
+// Default: 2160x3840 (4K portrait) - all visual parameters optimized for 4K
 // Fixed bugs: karaoke/wrapping mismatch, syllabification, parser, overlapping layers, expression escaping
 (function () {
     // ---------- DEFAULTS ----------
+    // Resolution: 4K portrait (2160x3840) - all visual params scaled 2x for 4K
     var defaults = {
         compName: "Lyrics",
-        compWidth: 1080,
-        compHeight: 1920,
+        compWidth: 2160,
+        compHeight: 3840,
         compDuration: 240,
         frameRate: 30,
         pixelAspect: 1.0,
 
         fontName: "Arial-BoldMT",
-        fontSize: 96,
+        fontSize: 192,  // 2x for 4K
         textColor: [1, 1, 1],
         highlightColor: [1, 0.85, 0.2],
         shadowColor: [0, 0, 0],
         shadowOpacity: 80,
-        shadowDistance: 6,
-        shadowSoftness: 12,
+        shadowDistance: 12,  // 2x for 4K
+        shadowSoftness: 24,  // 2x for 4K
 
         fadeDuration: 0.25,
-        lineSpacing: 120  // vertical spacing between simultaneous lines (pixels)
+        lineSpacing: 240  // 2x for 4K - vertical spacing between simultaneous lines (pixels)
     };
 
     // ---------- HELPERS ----------
@@ -726,9 +728,9 @@
                             glow.property(1).setValue(50);
                         }
                         try {
-                            glow.property("Glow Radius").setValue(15);
+                            glow.property("Glow Radius").setValue(30);  // 2x for 4K (was 15)
                         } catch (e) {
-                            glow.property(2).setValue(15);
+                            glow.property(2).setValue(30);  // 2x for 4K
                         }
                         try {
                             glow.property("Glow Intensity").setValue(0.8);
