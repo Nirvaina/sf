@@ -242,6 +242,22 @@
         var fontSizeInput = grpFont.add("edittext", undefined, defaults.fontSize.toString());
         fontSizeInput.characters = 4;
 
+        // Karaoke options
+        var grpKaraoke = w.add("group");
+        grpKaraoke.orientation = "row";
+        grpKaraoke.add("statictext", undefined, "Colore karaoke (RGB 0-255):");
+        var karaokeR = grpKaraoke.add("edittext", undefined, Math.round(defaults.highlightColor[0] * 255).toString());
+        karaokeR.characters = 3;
+        var karaokeG = grpKaraoke.add("edittext", undefined, Math.round(defaults.highlightColor[1] * 255).toString());
+        karaokeG.characters = 3;
+        var karaokeB = grpKaraoke.add("edittext", undefined, Math.round(defaults.highlightColor[2] * 255).toString());
+        karaokeB.characters = 3;
+
+        var grpFade = w.add("group");
+        grpFade.orientation = "row";
+        var fadeChk = grpFade.add("checkbox", undefined, "Abilita fade in/out");
+        fadeChk.value = true;
+
         // Buttons
         var btnGroup = w.add("group");
         btnGroup.orientation = "row";
@@ -265,7 +281,13 @@
                 frameRate: parseFloat(fpsInput.text) || defaults.frameRate,
                 fontName: fontInput.text || defaults.fontName,
                 fontSize: parseFloat(fontSizeInput.text) || defaults.fontSize,
-                vertical: verticalChk.value
+                vertical: verticalChk.value,
+                useFade: fadeChk.value,
+                highlightColor: [
+                    parseInt(karaokeR.text, 10) / 255.0 || defaults.highlightColor[0],
+                    parseInt(karaokeG.text, 10) / 255.0 || defaults.highlightColor[1],
+                    parseInt(karaokeB.text, 10) / 255.0 || defaults.highlightColor[2]
+                ]
             };
 
             // Validate config
@@ -611,32 +633,31 @@
                     // Drop shadow failed - continue without it
                 }
 
-                // Fade in/out
-                var opacity = baseLayer.property("Transform").property("Opacity");
-                var fade = defaults.fadeDuration;
-                opacity.setValueAtTime(start, 0);
-                opacity.setValueAtTime(Math.min(start + fade, end - 0.01), 100);
-                if (end < cfg.compDuration - 0.01) {
-                    opacity.setValueAtTime(Math.max(start + fade + 0.01, end - fade), 100);
-                    opacity.setValueAtTime(end, 0);
+                // Fade in/out (if enabled)
+                if (cfg.useFade) {
+                    var opacity = baseLayer.property("Transform").property("Opacity");
+                    var fade = defaults.fadeDuration;
+                    opacity.setValueAtTime(start, 0);
+                    opacity.setValueAtTime(Math.min(start + fade, end - 0.01), 100);
+                    if (end < cfg.compDuration - 0.01) {
+                        opacity.setValueAtTime(Math.max(start + fade + 0.01, end - fade), 100);
+                        opacity.setValueAtTime(end, 0);
+                    }
                 }
 
                 // Create highlight duplicate
                 var hl = baseLayer.duplicate();
                 hl.name = "Line " + (i + 1) + " - highlight";
 
-                // Move highlight below base layer
-                try {
-                    hl.moveBefore(baseLayer);
-                } catch (eMove) {
-                    // moveBefore failed - layers might be in wrong order but will still work
-                }
+                // DON'T move the highlight - it needs to stay ABOVE the base layer
+                // so the yellow karaoke color is visible on top of the white base text
+                // (When duplicated, it's automatically placed above the original)
 
                 var hlTextProp = hl.property("Source Text");
                 var hlDoc = hlTextProp.value;
                 hlDoc.font = cfg.fontName;
                 hlDoc.fontSize = cfg.fontSize;
-                hlDoc.fillColor = defaults.highlightColor;
+                hlDoc.fillColor = cfg.highlightColor;
                 hlDoc.applyFill = true;
                 hlDoc.applyStroke = false;
                 hlDoc.justification = ParagraphJustification.CENTER_JUSTIFY;
