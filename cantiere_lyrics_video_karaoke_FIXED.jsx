@@ -284,23 +284,54 @@
         // Try JSON first
         try {
             var j = JSON.parse(content);
-            if (j.chunks && j.chunks.length > 0) {
+            if (j.chunks) {
                 var result = [];
-                for (var i = 0; i < j.chunks.length; i++) {
-                    var c = j.chunks[i];
-                    if (!c.text || !c.timestamp || c.timestamp.length < 2) {
-                        continue; // skip invalid chunks
+                var chunksArray = j.chunks;
+
+                // Handle both array and object-like structures
+                var numChunks = 0;
+                for (var key in chunksArray) {
+                    if (chunksArray.hasOwnProperty(key)) {
+                        numChunks++;
                     }
-                    result.push({
-                        text: c.text.toString(),
-                        start: parseFloat(c.timestamp[0]),
-                        end: parseFloat(c.timestamp[1])
-                    });
                 }
+
+                if (numChunks > 0) {
+                    for (var i = 0; i < numChunks; i++) {
+                        var c = chunksArray[i];
+                        if (!c) continue;
+
+                        // More lenient validation
+                        if (!c.text) continue;
+                        if (!c.timestamp) continue;
+
+                        // Check if timestamp has at least 2 elements
+                        var hasValidTimestamp = false;
+                        if (c.timestamp[0] !== undefined && c.timestamp[1] !== undefined) {
+                            hasValidTimestamp = true;
+                        }
+
+                        if (!hasValidTimestamp) continue;
+
+                        var startTime = parseFloat(c.timestamp[0]);
+                        var endTime = parseFloat(c.timestamp[1]);
+
+                        // Skip if parsed values are invalid
+                        if (isNaN(startTime) || isNaN(endTime)) continue;
+
+                        result.push({
+                            text: c.text.toString(),
+                            start: startTime,
+                            end: endTime
+                        });
+                    }
+                }
+
                 if (result.length > 0) return result;
             }
         } catch (e) {
             // Not valid JSON, continue to custom parser
+            // Store error for debugging but don't fail yet
         }
 
         // -------- CUSTOM YAML-LIKE PARSER --------
@@ -368,7 +399,13 @@
         }
 
         if (chunks.length === 0) {
-            throw new Error("Nessun chunk valido trovato nel file. Verifica il formato.");
+            throw new Error(
+                "Nessun chunk valido trovato nel file.\n\n" +
+                "Il file deve essere in formato JSON con struttura:\n" +
+                '{\n  "chunks": [\n    {"text": "...", "timestamp": [inizio, fine]}\n  ]\n}\n\n' +
+                "Oppure formato YAML:\n" +
+                "- text: \"...\"\n  timestamp: [inizio, fine]"
+            );
         }
 
         return chunks;
