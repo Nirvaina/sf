@@ -659,8 +659,18 @@
                     hl.startTime = start;
                     hl.outPoint = end;
 
-                    // We'll set the expression first, then configure appearance
-                    // Don't call setValue yet - expression will control the text
+                    // Configure text properties BEFORE setting expression
+                    var hlTextProp = hl.property("Source Text");
+                    var hlDoc = hlTextProp.value;
+                    hlDoc.font = cfg.fontName;
+                    hlDoc.fontSize = cfg.fontSize;
+                    hlDoc.fillColor = cfg.highlightColor;
+                    hlDoc.applyFill = true;
+                    hlDoc.applyStroke = false;
+                    hlDoc.justification = ParagraphJustification.CENTER_JUSTIFY;
+                    hlDoc.text = "";  // Start empty
+                    hlTextProp.setValue(hlDoc);
+
                 } catch (eHL) {
                     alert("ERRORE creazione highlight layer " + (i+1) + ":\n" + eHL.toString());
                     continue; // Skip this chunk if highlight creation fails
@@ -689,8 +699,7 @@
                 // Get source text property
                 var hlTextProp = hl.property("Source Text");
 
-                // Build karaoke expression that returns a modified text document
-                // Note: justification values in AE expressions: LEFT=7019, CENTER=7020, RIGHT=7021
+                // Build SIMPLE karaoke expression - only modifies TEXT, not other properties
                 var expr =
                     "var syll = " + safeSyllArray + ";\n" +
                     "var s = inPoint;\n" +
@@ -703,15 +712,7 @@
                     "for (var i = 0; i < idx; i++) {\n" +
                     "  shown += syll[i];\n" +
                     "}\n" +
-                    "var td = value;\n" +
-                    "td.font = \"" + safeStringForExpression(cfg.fontName) + "\";\n" +
-                    "td.fontSize = " + cfg.fontSize + ";\n" +
-                    "td.fillColor = [" + cfg.highlightColor[0] + "," + cfg.highlightColor[1] + "," + cfg.highlightColor[2] + "];\n" +
-                    "td.applyFill = true;\n" +
-                    "td.applyStroke = false;\n" +
-                    "td.justification = 7020;\n" +
-                    "td.text = shown;\n" +
-                    "td;";
+                    "shown;";
 
                 try {
                     hlTextProp.expression = expr;
