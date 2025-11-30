@@ -668,7 +668,9 @@
                     hlDoc.applyFill = true;
                     hlDoc.applyStroke = false;
                     hlDoc.justification = ParagraphJustification.CENTER_JUSTIFY;
-                    hlDoc.text = ""; // will be set by expression
+                    // TEMP TEST: Keep full text to see if layer is visible
+                    // hlDoc.text = ""; // will be set by expression
+                    hlDoc.text = finalText; // TEMPORARY: keep full text for visibility test
                     hlTextProp.setValue(hlDoc);
                 } catch (eHL) {
                     alert("ERRORE creazione highlight layer " + (i+1) + ":\n" + eHL.toString());
@@ -746,9 +748,26 @@
             // Clean up: remove temporary tracking arrays
             activeRanges = null;
 
+            // DEBUG: Count layers
+            var totalLayers = comp.layers.length;
+            var highlightLayers = 0;
+            var baseLayers = 0;
+            for (var l = 1; l <= totalLayers; l++) {
+                var layerName = comp.layer(l).name;
+                if (layerName.indexOf("highlight") !== -1) {
+                    highlightLayers++;
+                } else if (layerName.indexOf("base") !== -1) {
+                    baseLayers++;
+                }
+            }
+
             alert(
                 "Composizione karaoke creata con successo!\n\n" +
                 "Chunks processati: " + chunks.length + "\n" +
+                "Layer totali nella comp: " + totalLayers + "\n" +
+                "  - Base layers: " + baseLayers + "\n" +
+                "  - Highlight layers: " + highlightLayers + "\n\n" +
+                "Se vedi 0 highlight layers, c'è un problema!\n" +
                 "Verifica il testo e i tempi nel pannello Timeline."
             );
 
