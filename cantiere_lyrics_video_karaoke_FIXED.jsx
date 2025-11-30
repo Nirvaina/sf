@@ -5,7 +5,7 @@
 (function () {
     // ---------- DEFAULTS ----------
     var defaults = {
-        compName: "Cantiere Lyrics Karaoke (Generated)",
+        compName: "Lyrics",
         compWidth: 1080,
         compHeight: 1920,
         compDuration: 240,
@@ -26,6 +26,31 @@
     };
 
     // ---------- HELPERS ----------
+
+    // Custom JSON parser for ExtendScript versions without JSON.parse()
+    function parseJSON(jsonString) {
+        // Check if native JSON.parse exists
+        if (typeof JSON !== 'undefined' && JSON.parse) {
+            return JSON.parse(jsonString);
+        }
+
+        // Fallback: use eval() for older ExtendScript
+        // Basic sanitization to prevent code injection
+        var sanitized = jsonString.replace(/^\s+|\s+$/g, ""); // trim
+
+        // Check if it looks like valid JSON (basic validation)
+        if (!(sanitized.charAt(0) === '{' || sanitized.charAt(0) === '[')) {
+            throw new Error("Invalid JSON: must start with { or [");
+        }
+
+        // Use eval to parse (this is how JSON was parsed before JSON.parse existed)
+        try {
+            return eval('(' + sanitized + ')');
+        } catch (e) {
+            throw new Error("JSON parse failed: " + e.toString());
+        }
+    }
+
     function safeStringForExpression(s) {
         if (s === null || s === undefined) s = "";
         s = s.toString();
@@ -285,7 +310,7 @@
         var jsonError = null;
         var debugInfo = "";
         try {
-            var j = JSON.parse(content);
+            var j = parseJSON(content);
             debugInfo += "JSON parsed successfully.\n";
 
             if (j.chunks) {
