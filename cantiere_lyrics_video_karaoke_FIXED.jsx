@@ -647,27 +647,38 @@
 
                 // Create highlight as BRAND NEW layer (not duplicate)
                 // This avoids inheriting drop shadow, effects, and keyframes from base layer
-                var hl = comp.layers.addText("");
-                hl.name = "Line " + (i + 1) + " - highlight";
+                var hl = null;
+                try {
+                    hl = comp.layers.addText(finalText);  // Start with full text, not empty
+                    hl.name = "Line " + (i + 1) + " - highlight";
 
-                // Position exactly same as base layer
-                hl.property("Transform").property("Position").setValue([posX, posY]);
+                    // Position exactly same as base layer
+                    hl.property("Transform").property("Position").setValue([posX, posY]);
 
-                // Set time range
-                hl.startTime = start;
-                hl.outPoint = end;
+                    // Set time range
+                    hl.startTime = start;
+                    hl.outPoint = end;
 
-                // Configure text properties for highlight
-                var hlTextProp = hl.property("Source Text");
-                var hlDoc = hlTextProp.value;
-                hlDoc.font = cfg.fontName;
-                hlDoc.fontSize = cfg.fontSize;
-                hlDoc.fillColor = cfg.highlightColor;
-                hlDoc.applyFill = true;
-                hlDoc.applyStroke = false;
-                hlDoc.justification = ParagraphJustification.CENTER_JUSTIFY;
-                hlDoc.text = ""; // will be filled by expression
-                hlTextProp.setValue(hlDoc);
+                    // Configure text properties for highlight
+                    var hlTextProp = hl.property("Source Text");
+                    var hlDoc = hlTextProp.value;
+                    hlDoc.font = cfg.fontName;
+                    hlDoc.fontSize = cfg.fontSize;
+                    hlDoc.fillColor = cfg.highlightColor;
+                    hlDoc.applyFill = true;
+                    hlDoc.applyStroke = false;
+                    hlDoc.justification = ParagraphJustification.CENTER_JUSTIFY;
+                    hlDoc.text = ""; // will be set by expression
+                    hlTextProp.setValue(hlDoc);
+                } catch (eHL) {
+                    alert("ERRORE creazione highlight layer " + (i+1) + ":\n" + eHL.toString());
+                    continue; // Skip this chunk if highlight creation fails
+                }
+
+                if (!hl) {
+                    alert("Highlight layer non creato per chunk " + (i+1));
+                    continue;
+                }
 
                 // CRITICAL FIX: Syllabify the WRAPPED text, not original
                 // This ensures karaoke highlight matches what's displayed
@@ -700,11 +711,11 @@
                     "td.text = shown;\n" +
                     "td;";
 
-                hlTextProp.expression = expr;
-
-                // Set time range for highlight
-                hl.startTime = start;
-                hl.outPoint = end;
+                try {
+                    hlTextProp.expression = expr;
+                } catch (eExpr) {
+                    alert("ERRORE impostazione expression per chunk " + (i+1) + ":\n" + eExpr.toString() + "\n\nExpression:\n" + expr.substr(0, 200));
+                }
 
                 // Add glow to highlight (optional)
                 try {
