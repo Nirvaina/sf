@@ -282,43 +282,67 @@
         }
 
         // Try JSON first
+        var jsonError = null;
+        var debugInfo = "";
         try {
             var j = JSON.parse(content);
+            debugInfo += "JSON parsed successfully.\n";
+
             if (j.chunks) {
+                debugInfo += "Found 'chunks' property.\n";
                 var result = [];
                 var chunksArray = j.chunks;
 
-                // Handle both array and object-like structures
-                var numChunks = 0;
-                for (var key in chunksArray) {
-                    if (chunksArray.hasOwnProperty(key)) {
-                        numChunks++;
+                // Simple array iteration - most compatible way
+                var arrayLength = 0;
+                try {
+                    arrayLength = chunksArray.length;
+                } catch (e) {
+                    // If .length fails, try counting
+                    for (var k in chunksArray) {
+                        if (chunksArray.hasOwnProperty(k) && !isNaN(parseInt(k, 10))) {
+                            arrayLength++;
+                        }
                     }
                 }
 
-                if (numChunks > 0) {
-                    for (var i = 0; i < numChunks; i++) {
+                debugInfo += "Array length: " + arrayLength + "\n";
+
+                if (arrayLength > 0) {
+                    for (var i = 0; i < arrayLength; i++) {
                         var c = chunksArray[i];
-                        if (!c) continue;
-
-                        // More lenient validation
-                        if (!c.text) continue;
-                        if (!c.timestamp) continue;
-
-                        // Check if timestamp has at least 2 elements
-                        var hasValidTimestamp = false;
-                        if (c.timestamp[0] !== undefined && c.timestamp[1] !== undefined) {
-                            hasValidTimestamp = true;
+                        if (!c) {
+                            debugInfo += "Chunk " + i + ": null/undefined\n";
+                            continue;
                         }
 
-                        if (!hasValidTimestamp) continue;
+                        // Check each field separately for debugging
+                        if (!c.text) {
+                            debugInfo += "Chunk " + i + ": missing text\n";
+                            continue;
+                        }
+                        if (!c.timestamp) {
+                            debugInfo += "Chunk " + i + ": missing timestamp\n";
+                            continue;
+                        }
 
-                        var startTime = parseFloat(c.timestamp[0]);
-                        var endTime = parseFloat(c.timestamp[1]);
+                        // Check timestamp array
+                        var ts0 = c.timestamp[0];
+                        var ts1 = c.timestamp[1];
+                        if (ts0 === undefined || ts1 === undefined) {
+                            debugInfo += "Chunk " + i + ": invalid timestamp array\n";
+                            continue;
+                        }
 
-                        // Skip if parsed values are invalid
-                        if (isNaN(startTime) || isNaN(endTime)) continue;
+                        var startTime = parseFloat(ts0);
+                        var endTime = parseFloat(ts1);
 
+                        if (isNaN(startTime) || isNaN(endTime)) {
+                            debugInfo += "Chunk " + i + ": timestamp values are NaN (" + ts0 + ", " + ts1 + ")\n";
+                            continue;
+                        }
+
+                        debugInfo += "Chunk " + i + ": OK (\"" + c.text.substr(0, 30) + "...\")\n";
                         result.push({
                             text: c.text.toString(),
                             start: startTime,
@@ -327,11 +351,14 @@
                     }
                 }
 
+                debugInfo += "Total valid chunks: " + result.length + "\n";
                 if (result.length > 0) return result;
+            } else {
+                debugInfo += "No 'chunks' property found in JSON.\n";
             }
         } catch (e) {
-            // Not valid JSON, continue to custom parser
-            // Store error for debugging but don't fail yet
+            jsonError = e.toString();
+            debugInfo += "JSON parse error: " + jsonError + "\n";
         }
 
         // -------- CUSTOM YAML-LIKE PARSER --------
@@ -401,6 +428,7 @@
         if (chunks.length === 0) {
             throw new Error(
                 "Nessun chunk valido trovato nel file.\n\n" +
+                "DEBUG INFO:\n" + debugInfo + "\n" +
                 "Il file deve essere in formato JSON con struttura:\n" +
                 '{\n  "chunks": [\n    {"text": "...", "timestamp": [inizio, fine]}\n  ]\n}\n\n' +
                 "Oppure formato YAML:\n" +
