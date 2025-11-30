@@ -1,6 +1,6 @@
-// cantiere_lyrics_video_karaoke.jsx
+// Grenar_lyrics_video_generator.jsx
 // After Effects ExtendScript - Karaoke Highlight + transcript file input + vertical wrapping
-// Version: 1.1 (FIXED)
+// Version: 1.2 (FIXED)
 // Fixed bugs: karaoke/wrapping mismatch, syllabification, parser, overlapping layers, expression escaping
 (function () {
     // ---------- DEFAULTS ----------
@@ -652,6 +652,16 @@
                 // DON'T move the highlight - it needs to stay ABOVE the base layer
                 // so the yellow karaoke color is visible on top of the white base text
                 // (When duplicated, it's automatically placed above the original)
+
+                // CRITICAL: Reset opacity to 100% (remove inherited fade keyframes)
+                // The highlight should always be fully visible, not fading
+                var hlOpacity = hl.property("Transform").property("Opacity");
+                // Remove all keyframes
+                while (hlOpacity.numKeys > 0) {
+                    hlOpacity.removeKey(1);
+                }
+                // Set constant 100% opacity
+                hlOpacity.setValue(100);
 
                 var hlTextProp = hl.property("Source Text");
                 var hlDoc = hlTextProp.value;
