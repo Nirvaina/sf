@@ -645,42 +645,6 @@
                     }
                 }
 
-                // Create highlight as BRAND NEW layer (not duplicate)
-                // This avoids inheriting drop shadow, effects, and keyframes from base layer
-                var hl = null;
-                try {
-                    hl = comp.layers.addText(finalText);  // Start with full text, not empty
-                    hl.name = "Line " + (i + 1) + " - highlight";
-
-                    // Position exactly same as base layer
-                    hl.property("Transform").property("Position").setValue([posX, posY]);
-
-                    // Set time range
-                    hl.startTime = start;
-                    hl.outPoint = end;
-
-                    // Configure text properties BEFORE setting expression
-                    var hlTextProp = hl.property("Source Text");
-                    var hlDoc = hlTextProp.value;
-                    hlDoc.font = cfg.fontName;
-                    hlDoc.fontSize = cfg.fontSize;
-                    hlDoc.fillColor = cfg.highlightColor;
-                    hlDoc.applyFill = true;
-                    hlDoc.applyStroke = false;
-                    hlDoc.justification = ParagraphJustification.CENTER_JUSTIFY;
-                    hlDoc.text = "";  // Start empty
-                    hlTextProp.setValue(hlDoc);
-
-                } catch (eHL) {
-                    alert("ERRORE creazione highlight layer " + (i+1) + ":\n" + eHL.toString());
-                    continue; // Skip this chunk if highlight creation fails
-                }
-
-                if (!hl) {
-                    alert("Highlight layer non creato per chunk " + (i+1));
-                    continue;
-                }
-
                 // CRITICAL FIX: Syllabify the WRAPPED text, not original
                 // This ensures karaoke highlight matches what's displayed
                 var sylls = autoSyllabifyPreserve(finalText);
@@ -695,9 +659,6 @@
                     safeSyllArray += '"' + safeStringForExpression(sylls[s]) + '"';
                 }
                 safeSyllArray += "]";
-
-                // Get source text property
-                var hlTextProp = hl.property("Source Text");
 
                 // Build SIMPLE karaoke expression - only modifies TEXT, not other properties
                 var expr =
@@ -714,10 +675,45 @@
                     "}\n" +
                     "shown;";
 
+                // Create highlight as BRAND NEW layer (not duplicate)
+                // This avoids inheriting drop shadow, effects, and keyframes from base layer
+                var hl = null;
+                var hlTextProp = null;
                 try {
+                    // Create with empty text to avoid inconsistencies
+                    hl = comp.layers.addText("");
+                    hl.name = "Line " + (i + 1) + " - highlight";
+
+                    // Position exactly same as base layer
+                    hl.property("Transform").property("Position").setValue([posX, posY]);
+
+                    // Set time range
+                    hl.startTime = start;
+                    hl.outPoint = end;
+
+                    // Configure text properties matching base layer
+                    hlTextProp = hl.property("Source Text");
+                    var hlDoc = hlTextProp.value;
+                    hlDoc.font = cfg.fontName;
+                    hlDoc.fontSize = cfg.fontSize;
+                    hlDoc.fillColor = cfg.highlightColor;
+                    hlDoc.applyFill = true;
+                    hlDoc.applyStroke = false;
+                    hlDoc.justification = ParagraphJustification.CENTER_JUSTIFY;
+                    hlDoc.text = "";  // Start empty
+                    hlTextProp.setValue(hlDoc);
+
+                    // Now apply expression
                     hlTextProp.expression = expr;
-                } catch (eExpr) {
-                    alert("ERRORE impostazione expression per chunk " + (i+1) + ":\n" + eExpr.toString() + "\n\nExpression:\n" + expr.substr(0, 200));
+
+                } catch (eHL) {
+                    alert("ERRORE creazione highlight layer " + (i+1) + ":\n" + eHL.toString());
+                    continue; // Skip this chunk if highlight creation fails
+                }
+
+                if (!hl) {
+                    alert("Highlight layer non creato per chunk " + (i+1));
+                    continue;
                 }
 
                 // Add glow to highlight (optional)
