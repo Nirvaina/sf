@@ -502,9 +502,9 @@
                 cfg.frameRate
             );
 
-            // Background solid
+            // Background solid - pure black
             var bg = comp.layers.addSolid(
-                [0.05, 0.05, 0.05],
+                [0, 0, 0],
                 "Background",
                 cfg.compWidth,
                 cfg.compHeight,
@@ -585,12 +585,12 @@
                 baseDoc.fillColor = defaults.textColor;
                 baseDoc.applyFill = true;
                 baseDoc.applyStroke = false;
-                baseDoc.justification = ParagraphJustification.CENTER_JUSTIFY;
+                baseDoc.justification = ParagraphJustification.LEFT_JUSTIFY;  // LEFT to avoid recentering
                 baseDoc.text = finalText;
                 baseTextProp.setValue(baseDoc);
 
-                // Position
-                var posX = cfg.compWidth / 2;
+                // Position - LEFT JUSTIFY so anchor is on left side, add left padding
+                var posX = cfg.compWidth * 0.1;  // 10% left padding
                 var posY = yOffset;
                 baseLayer.property("Transform").property("Position").setValue([posX, posY]);
 
@@ -699,7 +699,7 @@
                     hlDoc.fillColor = cfg.highlightColor;
                     hlDoc.applyFill = true;
                     hlDoc.applyStroke = false;
-                    hlDoc.justification = ParagraphJustification.CENTER_JUSTIFY;
+                    hlDoc.justification = ParagraphJustification.LEFT_JUSTIFY;  // LEFT to avoid recentering
                     hlDoc.text = "";  // Start empty
                     hlTextProp.setValue(hlDoc);
 
