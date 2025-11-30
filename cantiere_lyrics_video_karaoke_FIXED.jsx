@@ -690,6 +690,7 @@
                 var hlTextProp = hl.property("Source Text");
 
                 // Build karaoke expression that returns a modified text document
+                // Note: justification values in AE expressions: LEFT=7019, CENTER=7020, RIGHT=7021
                 var expr =
                     "var syll = " + safeSyllArray + ";\n" +
                     "var s = inPoint;\n" +
@@ -703,12 +704,12 @@
                     "  shown += syll[i];\n" +
                     "}\n" +
                     "var td = value;\n" +
-                    "td.font = \"" + cfg.fontName + "\";\n" +
+                    "td.font = \"" + safeStringForExpression(cfg.fontName) + "\";\n" +
                     "td.fontSize = " + cfg.fontSize + ";\n" +
                     "td.fillColor = [" + cfg.highlightColor[0] + "," + cfg.highlightColor[1] + "," + cfg.highlightColor[2] + "];\n" +
                     "td.applyFill = true;\n" +
                     "td.applyStroke = false;\n" +
-                    "td.justification = ParagraphJustification.CENTER_JUSTIFY;\n" +
+                    "td.justification = 7020;\n" +
                     "td.text = shown;\n" +
                     "td;";
 
