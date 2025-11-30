@@ -659,18 +659,8 @@
                     hl.startTime = start;
                     hl.outPoint = end;
 
-                    // Configure text properties for highlight
-                    var hlTextProp = hl.property("Source Text");
-                    var hlDoc = hlTextProp.value;
-                    hlDoc.font = cfg.fontName;
-                    hlDoc.fontSize = cfg.fontSize;
-                    hlDoc.fillColor = cfg.highlightColor;
-                    hlDoc.applyFill = true;
-                    hlDoc.applyStroke = false;
-                    hlDoc.justification = ParagraphJustification.CENTER_JUSTIFY;
-                    // Text will be filled progressively by expression
-                    hlDoc.text = "";
-                    hlTextProp.setValue(hlDoc);
+                    // We'll set the expression first, then configure appearance
+                    // Don't call setValue yet - expression will control the text
                 } catch (eHL) {
                     alert("ERRORE creazione highlight layer " + (i+1) + ":\n" + eHL.toString());
                     continue; // Skip this chunk if highlight creation fails
@@ -696,6 +686,10 @@
                 }
                 safeSyllArray += "]";
 
+                // Get source text property
+                var hlTextProp = hl.property("Source Text");
+
+                // Build karaoke expression that returns a modified text document
                 var expr =
                     "var syll = " + safeSyllArray + ";\n" +
                     "var s = inPoint;\n" +
@@ -709,6 +703,12 @@
                     "  shown += syll[i];\n" +
                     "}\n" +
                     "var td = value;\n" +
+                    "td.font = \"" + cfg.fontName + "\";\n" +
+                    "td.fontSize = " + cfg.fontSize + ";\n" +
+                    "td.fillColor = [" + cfg.highlightColor[0] + "," + cfg.highlightColor[1] + "," + cfg.highlightColor[2] + "];\n" +
+                    "td.applyFill = true;\n" +
+                    "td.applyStroke = false;\n" +
+                    "td.justification = ParagraphJustification.CENTER_JUSTIFY;\n" +
                     "td.text = shown;\n" +
                     "td;";
 
