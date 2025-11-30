@@ -645,24 +645,19 @@
                     }
                 }
 
-                // Create highlight duplicate
-                var hl = baseLayer.duplicate();
+                // Create highlight as BRAND NEW layer (not duplicate)
+                // This avoids inheriting drop shadow, effects, and keyframes from base layer
+                var hl = comp.layers.addText("");
                 hl.name = "Line " + (i + 1) + " - highlight";
 
-                // DON'T move the highlight - it needs to stay ABOVE the base layer
-                // so the yellow karaoke color is visible on top of the white base text
-                // (When duplicated, it's automatically placed above the original)
+                // Position exactly same as base layer
+                hl.property("Transform").property("Position").setValue([posX, posY]);
 
-                // CRITICAL: Reset opacity to 100% (remove inherited fade keyframes)
-                // The highlight should always be fully visible, not fading
-                var hlOpacity = hl.property("Transform").property("Opacity");
-                // Remove all keyframes
-                while (hlOpacity.numKeys > 0) {
-                    hlOpacity.removeKey(1);
-                }
-                // Set constant 100% opacity
-                hlOpacity.setValue(100);
+                // Set time range
+                hl.startTime = start;
+                hl.outPoint = end;
 
+                // Configure text properties for highlight
                 var hlTextProp = hl.property("Source Text");
                 var hlDoc = hlTextProp.value;
                 hlDoc.font = cfg.fontName;
