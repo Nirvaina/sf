@@ -668,9 +668,8 @@
                     hlDoc.applyFill = true;
                     hlDoc.applyStroke = false;
                     hlDoc.justification = ParagraphJustification.CENTER_JUSTIFY;
-                    // TEMP TEST: Keep full text to see if layer is visible
-                    // hlDoc.text = ""; // will be set by expression
-                    hlDoc.text = finalText; // TEMPORARY: keep full text for visibility test
+                    // Text will be filled progressively by expression
+                    hlDoc.text = "";
                     hlTextProp.setValue(hlDoc);
                 } catch (eHL) {
                     alert("ERRORE creazione highlight layer " + (i+1) + ":\n" + eHL.toString());
